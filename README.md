@@ -1,2 +1,2 @@
 # WeddingFibbage
-Fibbage but for the bride and groom and the bridal party
+Fibbage but for the bride, groom, and the whole bridal party. 

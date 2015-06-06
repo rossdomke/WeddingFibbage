@@ -1,0 +1,28 @@
+<head>
+  <title>Wedding Fibbage</title>
+</head>
+
+<body>
+	{{> loginButtons}}
+	<br/>
+	{{> UI.dynamic template=state}}
+</body>
+<template name="loginPrompt">
+	<h1>Welcome to Wedding Fibbage</h1>
+	<p>Please Login/Create an account to continue</p>
+</template>
+<template name="groupList">
+	<div>Online Users: {{onlineUsers}}</div>
+	<ul>
+		{{#each groups}}
+			{{> group}}
+		{{/each}}
+	</ul>
+</template>
+<template name="group">
+	<li>{{Name}} - {{Owner}}</li>
+</template>
+
+<template name="gameRoom">
+
+</template>
