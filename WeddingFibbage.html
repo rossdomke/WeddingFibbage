@@ -3,7 +3,11 @@
 </head>
 
 <body>
-	{{> loginButtons}}
+	{{#if currentUser}}
+		<span>Hello {{currentUser.username}} - <button onClick="Meteor.logout(function(){Meteor.call('setUserOffline');})">Logout</button></span>
+	{{else}}
+		{{> loginButtons}}
+	{{/if}}
 	<br/>
 	{{> UI.dynamic template=state}}
 </body>
@@ -13,6 +17,12 @@
 </template>
 <template name="groupList">
 	<div>Online Users: {{onlineUsers}}</div>
+	<div>
+		<form>
+			<input type="text" id="groupName" placeholder="Group Name"/>
+			<button type="submit">Create Group</button>
+		</form>
+	</div>
 	<ul>
 		{{#each groups}}
 			{{> group}}
@@ -20,9 +30,15 @@
 	</ul>
 </template>
 <template name="group">
-	<li>{{Name}} - {{Owner}}</li>
+	<li><button data-roomid="{{_id}}">Join</button> - {{name}} - {{ownerId}} - {{password}}</li>
 </template>
 
 <template name="gameRoom">
-
+	You're in game room <button id="leaveGroup">Leave Group</button> {{groupId}} - {{groupName}}
+	{{#each players}}
+		{{> player}}
+	{{/each}}
+</template>
+<template name="player">
+	<li>{{username}} {{#if online}}(Online){{else}}(Offline){{/if}}</li>
 </template>
