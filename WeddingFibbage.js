@@ -34,7 +34,7 @@ if (Meteor.isClient) {
       }else{
         var _lastGroup = Players.findOne({userId: Meteor.userId()}).lastGroup;
         if(_lastGroup != null){
-          if(Groups.findOne(_lastGroup).isActive){
+          if(Groups.findOne(_lastGroup)){
             return "gameRoom";
           }else{
             alert("room inactive - The owner has closed the group - returning to group list");
@@ -72,10 +72,6 @@ if (Meteor.isClient) {
   Accounts.onLogin(function(){
     Meteor.call("setUserOnline", Meteor.userId());
   });
-  // Accounts.onLogout(function(){
-  //   Meteor.call("setUserOnline", false);
-  //   console.log('logoff - offline');
-  // })
 }
 
 if (Meteor.isServer) {
@@ -86,10 +82,10 @@ if (Meteor.isServer) {
     },
     setUserOffline: function(conId){
       conId = conId || this.connection.id;
-      Players.update({connectionId: conId}, {$set : {online: false}},{multi: true});
+      Players.update({connectionId: conId}, {$set : {online: false, lastOnline: Date()}},{multi: true});
     },
     createGroup : function(name, ownerId){
-        var groupId = Groups.insert({name: name, ownerId: ownerId, password:generatePassword(), redPlayer: null, bluePlayer: null, isActive: true});
+        var groupId = Groups.insert({name: name, ownerId: ownerId, password:generatePassword(), redPlayer: null, bluePlayer: null});
         Players.update({userId: ownerId}, {$set: {lastGroup: groupId}});
     },
     joinGroup : function(_userId, _groupId){
