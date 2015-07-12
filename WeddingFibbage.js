@@ -87,6 +87,18 @@ if (Meteor.isClient) {
     isOwner : function(){
       var _groupId = Players.findOne({userId : Meteor.userId()}).lastGroup;
       return Groups.findOne(_groupId).ownerId == Meteor.userId();
+    },
+    yourTeam : function(){
+      switch (Players.findOne({userId : Meteor.userId()}).team){
+        case "r":
+          return "Red";
+        case "b":
+          return "Blue";
+        case "s":
+          return "Spectator";
+        default: 
+          return "Spectator";
+      }
     }
   });
   Template.gameRoom.events({
@@ -95,8 +107,11 @@ if (Meteor.isClient) {
     },
     "click #disbandGroup" : function(event){
       var _groupId = $(event.target).data("groupid");
-      console.log(_groupId);
       Meteor.call('disbandGroup', _groupId);
+    },
+    "click .team" : function(event){
+      var _team = $(event.target).data('team');
+      Meteor.call("changeTeam", Meteor.userId(), _team);
     }
   });
   
@@ -109,6 +124,19 @@ if (Meteor.isClient) {
       var _groupId = Players.findOne({userId : Meteor.userId()}).lastGroup;
       Meteor.call("joinGroup", Meteor.userId(), _groupId, $(event.target).siblings('input').val().toUpperCase());
       return true;
+    }
+  });
+  Template.player.helpers({
+    isOwner : function(){
+      var _groupId = Players.findOne({userId : Meteor.userId()}).lastGroup;
+      return Groups.findOne(_groupId).ownerId == Meteor.userId();
+    }
+  });
+  Template.player.events({
+    "click button.kick" : function(event){
+      var _playerId = $(event.target).data('userid');
+      Meteor.call("sendMessageToPlayer", _playerId, "You have been kicked from the room");
+      Meteor.call("leaveGroup", _playerId);
     }
   });
   Accounts.ui.config({
@@ -158,6 +186,9 @@ if (Meteor.isServer) {
     sendMessageToPlayer : function (_playerId, _text){
       Messages.insert({playerId: _playerId, text: _text});
       return;
+    },
+    changeTeam : function (_userId, _team){
+      Players.update({userId: _userId}, {$set: {team: _team}});
     },
     test : function(){
     

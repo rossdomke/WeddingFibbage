@@ -51,10 +51,21 @@
 	{{else}}
 		You're in game room <button id="leaveGroup">Leave Group</button> {{group._id}} - {{group.name}}
 	{{/if}}
+	<div>
+		You are on team: {{yourTeam}} <br/>
+		Pick Your Team: <button class="team" data-team="r">Her</button>
+						<button class="team" data-team="b">Him</button>
+						<button class="team" data-team="s">Spectate</button>
+	</div>
 	{{#each players}}
 		{{> player}}
 	{{/each}}
 </template>
 <template name="player">
-	<li>{{username}} {{#if online}}(Online){{else}}(Offline){{/if}}</li>
+	<li class="{{team}}">
+		{{username}} {{#if online}}(Online){{else}}(Offline){{/if}}
+		{{#if isOwner}} 
+			<button class="kick" data-userid="{{userId}}">kick</button>
+		{{/if}}
+	</li>
 </template>
