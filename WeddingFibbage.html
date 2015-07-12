@@ -63,9 +63,18 @@
 </template>
 <template name="player">
 	<li class="{{team}}">
+		{{#if isRedPlayer userId lastGroup}}
+			Red Team Leader
+		{{/if}}
+		{{#if isBluePlayer userId lastGroup}}
+			Blue Team Leader
+		{{/if}}
 		{{username}} {{#if online}}(Online){{else}}(Offline){{/if}}
-		{{#if isOwner}} 
+		{{#if isOwner userId}} 
+		
 			<button class="kick" data-userid="{{userId}}">kick</button>
+			<button class="blue" data-userid="{{userId}}">Groom</button>
+			<button class="red" data-userid="{{userId}}">Bride</button>
 		{{/if}}
 	</li>
 </template>

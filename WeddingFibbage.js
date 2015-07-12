@@ -120,16 +120,24 @@ if (Meteor.isClient) {
       Meteor.call("leaveGroup");
     },
     "click .submit" : function (event) {
-      
       var _groupId = Players.findOne({userId : Meteor.userId()}).lastGroup;
       Meteor.call("joinGroup", Meteor.userId(), _groupId, $(event.target).siblings('input').val().toUpperCase());
       return true;
     }
   });
   Template.player.helpers({
-    isOwner : function(){
+    isOwner : function(_playerId){
+      if(_playerId == Meteor.userId()){
+        return false;
+      }
       var _groupId = Players.findOne({userId : Meteor.userId()}).lastGroup;
       return Groups.findOne(_groupId).ownerId == Meteor.userId();
+    },
+    isRedPlayer : function(_playerId, _groupId){
+      return Groups.findOne(_groupId).redPlayer == _playerId;
+    },
+    isBluePlayer : function(_playerId, _groupId){
+      return Groups.findOne(_groupId).bluePlayer == _playerId;
     }
   });
   Template.player.events({
@@ -137,6 +145,14 @@ if (Meteor.isClient) {
       var _playerId = $(event.target).data('userid');
       Meteor.call("sendMessageToPlayer", _playerId, "You have been kicked from the room");
       Meteor.call("leaveGroup", _playerId);
+    },
+    "click button.red" : function(event){
+      var _playerId = $(event.target).data('userid');
+      Meteor.call("assignPlayer", _playerId, "r");
+    },
+    "click button.blue" : function(event){
+      var _playerId = $(event.target).data('userid');
+      Meteor.call("assignPlayer", _playerId, "b");
     }
   });
   Accounts.ui.config({
@@ -164,7 +180,7 @@ if (Meteor.isServer) {
     },
     joinGroup : function(_userId, _groupId, _password){
       _userId = _userId || Meteor.userId();
-      Players.update({userId: _userId}, {$set: {lastGroup : _groupId, lastGroupPassword: _password}});
+      Players.update({userId: _userId}, {$set: {lastGroup : _groupId, lastGroupPassword: _password, team: 's'}});
     },
     leaveGroup : function(_userId){
       _userId = _userId || Meteor.userId();
@@ -190,12 +206,19 @@ if (Meteor.isServer) {
     changeTeam : function (_userId, _team){
       Players.update({userId: _userId}, {$set: {team: _team}});
     },
+    assignPlayer : function(_playerId, _team){
+      var _groupId = Players.findOne({userId: _playerId}).lastGroup;
+      if(_team == 'b'){
+        Groups.update({_id: _groupId}, {$set: {bluePlayer : _playerId}});
+      }else{
+        Groups.update({_id: _groupId}, {$set: {redPlayer : _playerId}});
+      }
+    },
     test : function(){
     
       Groups.remove({});
       Messages.remove({});
       Players.remove({});
-      
     }
   });
   Meteor.startup(function () {
