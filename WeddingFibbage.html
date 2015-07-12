@@ -3,19 +3,30 @@
 </head>
 
 <body>
-	{{#if currentUser}}
-		<span>Hello {{currentUser.username}} - <button onClick="Meteor.logout(function(){Meteor.call('setUserOffline');})">Logout</button></span>
-	{{else}}
+	{{#if currentUser}}{{else}} 
 		{{> loginButtons}}
 	{{/if}}
-	<br/>
+	{{> UI.dynamic template=message}}
 	{{> UI.dynamic template=state}}
 </body>
 <template name="loginPrompt">
 	<h1>Welcome to Wedding Fibbage</h1>
 	<p>Please Login/Create an account to continue</p>
 </template>
+<template name="message">
+	<div>Pending Messages : {{count}}</div>
+	<input type="hidden" value="{{message._id}}" />
+	<div>{{message.text}}</div>
+	<button>ok</button>
+	<br/><br/><br/>
+</template>
+<template name="joinRoom">
+	<input type="text" max-length=4 /> 
+	<button class="cancel">Cancel</button>
+	<button class="submit">Play</button>
+</template>
 <template name="groupList">
+	<span>Hello {{currentUser.username}} - <button onClick="Meteor.logout(function(){Meteor.call('setUserOffline');})">Logout</button></span>
 	<div>Online Users: {{onlineUsers}}</div>
 	<div>
 		<form>
@@ -34,7 +45,12 @@
 </template>
 
 <template name="gameRoom">
-	You're in game room <button id="leaveGroup">Leave Group</button> {{groupId}} - {{groupName}}
+	<div> Room Code: {{group.password}}</div>
+	{{#if isOwner}}
+		<button id="disbandGroup" data-groupid="{{group._id}}">Disband Group</button>
+	{{else}}
+		You're in game room <button id="leaveGroup">Leave Group</button> {{group._id}} - {{group.name}}
+	{{/if}}
 	{{#each players}}
 		{{> player}}
 	{{/each}}
