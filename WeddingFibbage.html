@@ -51,12 +51,14 @@
 	{{else}}
 		You're in game room <button id="leaveGroup">Leave Group</button> {{group._id}} - {{group.name}}
 	{{/if}}
-	<div>
-		You are on team: {{yourTeam}} <br/>
-		Pick Your Team: <button class="team" data-team="r">Her</button>
-						<button class="team" data-team="b">Him</button>
-						<button class="team" data-team="s">Spectate</button>
-	</div>
+	<br/>
+	You are on team: {{yourTeam}} 
+	<br/>
+	{{#if isOwner}}
+		{{> UI.dynamic template=adminControls}}
+	{{/if}}
+	{{> UI.dynamic template=game}}
+
 	{{#each players}}
 		{{> player}}
 	{{/each}}
@@ -69,12 +71,116 @@
 		{{#if isBluePlayer userId lastGroup}}
 			Blue Team Leader
 		{{/if}}
-		{{username}} {{#if online}}(Online){{else}}(Offline){{/if}}
+		-- {{username}} -- {{team}} {{#if online}}(Online){{else}}(Offline){{/if}}
 		{{#if isOwner userId}} 
 		
 			<button class="kick" data-userid="{{userId}}">kick</button>
-			<button class="blue" data-userid="{{userId}}">Groom</button>
-			<button class="red" data-userid="{{userId}}">Bride</button>
+			{{#if isRedPlayer userId lastGroup}}
+				<button class="blue" data-userid="{{userId}}">Groom</button>
+			{{else}}
+				{{#if isBluePlayer userId lastGroup}}
+					<button class="red" data-userid="{{userId}}">Bride</button>
+				{{else}}
+				<button class="blue" data-userid="{{userId}}">Groom</button>
+				<button class="red" data-userid="{{userId}}">Bride</button>
+				{{/if}}
+			{{/if}}
 		{{/if}}
 	</li>
+</template>
+
+<template name="pickTeam">
+	<div>
+		
+		Pick Your Team: <button class="team" data-team="r">Her</button>
+						<button class="team" data-team="b">Him</button>
+						<button class="team" data-team="s">Spectate</button>
+	</div>
+</template>
+<template name="startGame"> 
+	<button>Start Game</button>
+</template>
+<template name="nextQuestion">
+	{{#if everyoneHasAnswered}}
+	<button id="NextQuestion">Next Question</button>
+	{{else}}
+	<button id="AdvanceToPicking">Go to Picking</button>
+	{{/if}}
+</template>
+<template name="tallyScore">
+	Tally score not implemented
+</template>
+<template name="question">
+	<div>
+		{{question.text}}
+	</div>
+	<br/>
+	{{#if isTeamLeader}}
+		{{#if teamLeaderHasAnswered}}
+			{{#if everyoneHasAnswered}}
+				{{> pickAnswer}}
+			{{else}}
+				<div>Your answer  {{leaderAnswer}}</div>
+				<div>waiting for everyone to finish their answers</div>
+			{{/if}} 
+		{{else}}
+			team leader anser:
+			<input name="answerInput" type="text"/><button class="submitAnswer">Submit</button>
+		{{/if}}
+	{{else}}
+		{{#if teamLeaderHasAnswered}}
+			
+			<br />
+			{{#if userHasAnswered}}
+				{{#if everyoneHasAnswered}}
+					{{> pickAnswer}}
+				{{else}}
+					<div>waiting for everyone to finish their answers</div>
+				{{/if}}
+			{{else}}
+				<div>your leaders answer  {{leaderAnswer}}</div>
+				<input name="answerInput" type="text"/><button class="submitAnswer">Submit</button>
+			{{/if}}
+			
+		{{else}}
+			Waiting for you team leader to answer the question. 
+		{{/if}}
+	{{/if}}
+	<br/><br/><br/>
+</template>
+<template name="pickAnswer">
+	<div>
+		{{#if isTeamLeader}}
+			#####Pick the correct Answers######
+		{{else}}
+			#####Opposite Team Answers######
+		{{/if}}
+		{{#each getAnswers false}}
+			{{#if isTeamLeader}}
+				{{#if notAnswered}}
+					{{> activeAnswer}}
+				{{else}}
+					{{> answer}}
+				{{/if}}
+			{{else}}
+				{{> answer}}
+			{{/if}}
+		 
+		{{/each}}
+	</div>
+	<div>
+		#####Your Team Answers######
+		{{#each getAnswers true}}
+		
+		 {{> answer}}
+		{{/each}}
+	</div>
+</template>
+<template name="answer">
+	<div>
+		{{chosen playerId}} - {{correct playerId}} - {{answer}}
+	</div>
+</template>
+<template name="activeAnswer">
+	<button data-playerid="{{playerId}}">{{answer}}</button>
 </template>
