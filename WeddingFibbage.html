@@ -1,186 +1,306 @@
 <head>
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Wedding Fibbage</title>
 </head>
 
 <body>
-	{{#if currentUser}}{{else}} 
-		{{> loginButtons}}
-	{{/if}}
-	{{> UI.dynamic template=message}}
-	{{> UI.dynamic template=state}}
+	<div class="MainContainer">
+		{{#if currentUser}}{{else}} 
+			{{> loginButtons}}
+		{{/if}}
+		{{> UI.dynamic template=message}}
+		{{> UI.dynamic template=state}}
+	</div>
 </body>
 <template name="loginPrompt">
-	<h1>Welcome to Wedding Fibbage</h1>
-	<p>Please Login/Create an account to continue</p>
+	<div class="Welcome">
+		<h1>The Newlywed Game</h1>
+		<p>Please Login/Create an account to continue</p>
+	</div>
 </template>
 <template name="message">
-	<div>Pending Messages : {{count}}</div>
-	<input type="hidden" value="{{message._id}}" />
-	<div>{{message.text}}</div>
-	<button>ok</button>
-	<br/><br/><br/>
+	<div class="PopupShadow">
+		<div class="InnerContainer">
+			<div class="InnerMessage">
+				<small>Pending Messages: {{count}}</small>
+				<input type="hidden" value="{{message._id}}" />
+				<p>{{message.text}}</p>
+				<button class="btn danger pull-right">OK</button>
+				<div class="clearfix"></div>
+			</div>		
+		</div>
+	</div>
 </template>
 <template name="joinRoom">
-	<input type="text" max-length=4 /> 
-	<button class="cancel">Cancel</button>
-	<button class="submit">Play</button>
+	<div class="Welcome">
+		<h2>Room Code</h2>
+		<input class="form-control" placeholder="Room Code" type="text" max-length=4 />
+		<button class="cancel btn danger pull-left">Cancel</button>
+		<button class="submit btn success pull-right">Play</button>
+	</div> 
+	
 </template>
 <template name="groupList">
-	<span>Hello {{currentUser.username}} - <button onClick="Meteor.logout(function(){Meteor.call('setUserOffline');})">Logout</button></span>
-	<div>Online Users: {{onlineUsers}}</div>
-	<div>
+	<button class="btn danger pull-right" onClick="Meteor.logout(function(){Meteor.call('setUserOffline');})">Logout</button>
+	<small class="pull-left">Online Users: {{onlineUsers}}</small>
+	<div class="text-left clearfix">
+		<h2>Create Group</h2>
+	</div>
+	<div class="Welcome clearfix">
 		<form>
-			<input type="text" id="groupName" placeholder="Group Name"/>
-			<button type="submit">Create Group</button>
+			<input type="text" class="form-control" id="groupName" placeholder="Group Name"/>
+			<button type="submit" class="btn btn-block success">Create Group</button>
 		</form>
 	</div>
-	<ul>
+	<hr/>
+	<h2>Join Group</h2>
+	<div class="GroupList">
 		{{#each groups}}
 			{{> group}}
 		{{/each}}
-	</ul>
+	</div>
 </template>
 <template name="group">
-	<li><button data-roomid="{{_id}}">Join</button> - {{name}} - {{ownerId}} - {{password}}</li>
+	<button class="GroupButton btn default btn-block" data-roomid="{{_id}}">{{name}}</button>
 </template>
-
+<template name="scoreBoard">
+	<div class="">
+		<h2>Score Board</h2>
+		<div class="ScoreBoard Red">{{score "r"}}</div>
+		<div class="ScoreBoard Blue">{{score "b"}}</div>
+		{{#if score currentUser}}
+			<div class="ScoreBoard Grey">{{score currentUser}}</div>
+		{{/if}}
+	</div>
+	
+	 
+	
+</template>	
 <template name="gameRoom">
-	<div> Room Code: {{group.password}}</div>
 	{{#if isOwner}}
-		<button id="disbandGroup" data-groupid="{{group._id}}">Disband Group</button>
+		<button id="disbandGroup" class="btn danger pull-right" data-groupid="{{group._id}}">Disband Group</button>
 	{{else}}
-		You're in game room <button id="leaveGroup">Leave Group</button> {{group._id}} - {{group.name}}
+		<button class="btn danger pull-right" id="leaveGroup">Leave</button>
 	{{/if}}
-	<br/>
-	You are on team: {{yourTeam}} 
-	<br/>
+	
+	<div class="pull-left"><small>Room Code: {{group.password}}</small></div>
+	
+	<div class="clearfix"></div>
+	{{#if hasStarted}}
+		{{> scoreBoard}}
+	{{/if}}
+	<div class="TeamPick {{yourTeam}}">
+		{{#if notLeader}}
+			{{#if hasStarted}}
+				{{#if yourTeam "Red"}}
+					<h2>Bride's Team</h2>
+				{{else}}
+					{{#if yourTeam "Blue"}}
+						<h2>Groom's Team</h2>
+					{{else}}
+						<h2>Pick A Team</h2>
+						<button class="team btn danger" style="width: 49%" data-team="r">Bride</button>
+						<button class="team btn default" style="width: 49%"  data-team="b">Groom</button>
+						<div class="clearfix"><br/></div>
+					{{/if}}
+				{{/if}}
+			{{else}}
+				{{#if yourTeam "Spectator"}}
+					<h2>Pick A Team</h2>
+					<button class="team btn danger" style="width: 49%" data-team="r">Bride</button>
+					<button class="team btn default" style="width: 49%"  data-team="b">Groom</button>
+				{{else}}
+					{{#if yourTeam "Red"}}
+						<h2>Bride's Team</h2>
+						<button class="team btn default btn-block" data-team="b">Switch</button>
+					{{else}}
+						<h2>Groom's Team</h2>
+						<button class="team btn danger btn-block" data-team="r">Switch</button>
+					{{/if}}
+				{{/if}}
+			{{/if}}
+		{{else}}
+			{{#if yourTeam "Red"}}
+				<h2>You're the Bride</h2>
+			{{else}}
+				<h2>You're the Groom</h2>
+				
+			{{/if}}
+		{{/if}}
+	</div>
 	{{#if isOwner}}
 		{{> UI.dynamic template=adminControls}}
 	{{/if}}
 	{{> UI.dynamic template=game}}
-
-	{{#each players}}
-		{{> player}}
-	{{/each}}
+	<hr/>
+	<div class="Welcome">
+		<h2>Teams</h2>
+	</div>
+	<div class="teamList pull-left redTeam">
+		<h3>Bride Team</h3>
+		{{> player redLeader}}
+		{{#each team "r"}}
+			{{> player}}
+		{{/each}}
+	</div>
+	<div class="teamList pull-left blueTeam">
+		<h3>Groom Team</h3>
+		{{> player blueLeader}}
+		{{#each team "b"}}
+			{{> player}}
+		{{/each}}
+	</div>
+	<div class="teamList spectators clearfix">
+		<h3>Spectators</h3>
+		{{#each team "s"}}
+			{{> player}}
+		{{/each}}
+	</div>
 </template>
 <template name="player">
-	<li class="{{team}}">
+	<div class="player {{#if isOwner userId}}{{team}}{{/if}}" data-userid="{{userId}}" data-team="{{team}}">
 		{{#if isRedPlayer userId lastGroup}}
-			Red Team Leader
-		{{/if}}
-		{{#if isBluePlayer userId lastGroup}}
-			Blue Team Leader
-		{{/if}}
-		-- {{username}} -- {{team}} {{#if online}}(Online){{else}}(Offline){{/if}}
-		{{#if isOwner userId}} 
-		
-			<button class="kick" data-userid="{{userId}}">kick</button>
-			{{#if isRedPlayer userId lastGroup}}
-				<button class="blue" data-userid="{{userId}}">Groom</button>
+			<span class="{{#if hasAnswered}} answered {{/if}}">&hearts;</span>
+		{{else}}
+			{{#if isBluePlayer userId lastGroup}}
+			
+				<span class="{{#if hasAnswered}} answered {{/if}}">&spades;</span>
 			{{else}}
-				{{#if isBluePlayer userId lastGroup}}
-					<button class="red" data-userid="{{userId}}">Bride</button>
-				{{else}}
-				<button class="blue" data-userid="{{userId}}">Groom</button>
-				<button class="red" data-userid="{{userId}}">Bride</button>
-				{{/if}}
+				
+				<span class="user {{#if hasAnswered}} answered {{/if}}"></span>	 
 			{{/if}}
 		{{/if}}
-	</li>
-</template>
 
-<template name="pickTeam">
-	<div>
+		{{username}}
 		
-		Pick Your Team: <button class="team" data-team="r">Her</button>
-						<button class="team" data-team="b">Him</button>
-						<button class="team" data-team="s">Spectate</button>
+		{{#if score userId}}
+			({{score userId}})
+		{{/if}}
+		
+		{{#if isOwner userId}} 
+			<button class="kick btn info" data-userid="{{userId}}">X</button>
+		{{/if}}
 	</div>
 </template>
 <template name="startGame"> 
-	<button>Start Game</button>
+	<hr />
+	<button class="btn success btn-block">Start Game</button>
 </template>
 <template name="nextQuestion">
 	{{#if everyoneHasAnswered}}
-	<button id="NextQuestion">Next Question</button>
+	<button class="btn success btn-block" id="NextQuestion">Next Question</button>
 	{{else}}
-	<button id="AdvanceToPicking">Go to Picking</button>
+	<button class="btn info btn-block" id="AdvanceToPicking">Go to Picking</button>
 	{{/if}}
+	<hr/>
 </template>
 <template name="tallyScore">
 	Tally score not implemented
 </template>
 <template name="question">
-	<div>
+	<div class="QuestionContainer">
 		{{question.text}}
 	</div>
-	<br/>
+	<hr/>
 	{{#if isTeamLeader}}
 		{{#if teamLeaderHasAnswered}}
 			{{#if everyoneHasAnswered}}
 				{{> pickAnswer}}
 			{{else}}
-				<div>Your answer  {{leaderAnswer}}</div>
-				<div>waiting for everyone to finish their answers</div>
+				<div class="LeaderAnswer">
+					A: {{leaderAnswer}}	
+				</div>
+				<br/>
+				<div class="status">
+					Waiting for everyone to answer
+				</div>
 			{{/if}} 
 		{{else}}
-			team leader anser:
-			<input name="answerInput" type="text"/><button class="submitAnswer">Submit</button>
+			<input name="answerInput" type="text" class=" form-control" placeholder="Your answer"/><button class="submitAnswer btn success btn-block">Submit</button>
 		{{/if}}
 	{{else}}
 		{{#if teamLeaderHasAnswered}}
-			
-			<br />
 			{{#if userHasAnswered}}
 				{{#if everyoneHasAnswered}}
 					{{> pickAnswer}}
 				{{else}}
-					<div>waiting for everyone to finish their answers</div>
+					<div class="status">
+						Waiting for everyone to answer
+					</div>
+					{{> pickAnswer}}
 				{{/if}}
 			{{else}}
-				<div>your leaders answer  {{leaderAnswer}}</div>
-				<input name="answerInput" type="text"/><button class="submitAnswer">Submit</button>
+				<div class="LeaderAnswer">
+					Leaders Answer: {{leaderAnswer}}	
+				</div>
+				<input name="answerInput" type="text" class=" form-control" placeholder="Your answer"/><button class="submitAnswer btn success btn-block">Submit</button>
+				{{> pickAnswer}}
 			{{/if}}
 			
 		{{else}}
-			Waiting for you team leader to answer the question. 
+			<div class="status">
+				Waiting for you team leader to answer the question.
+			</div> 
 		{{/if}}
 	{{/if}}
-	<br/><br/><br/>
 </template>
 <template name="pickAnswer">
 	<div>
-		{{#if isTeamLeader}}
-			#####Pick the correct Answers######
-		{{else}}
-			#####Opposite Team Answers######
-		{{/if}}
-		{{#each getAnswers false}}
+		
+		
 			{{#if isTeamLeader}}
 				{{#if notAnswered}}
-					{{> activeAnswer}}
+					<div class="Welcome">
+						<h2>Pick Their Answer</h2>
+					</div>
+					<div class="ActiveAnswerList">
+						{{#each getAnswers false}}
+							{{> activeAnswer}}
+						{{/each}}
+					</div>
 				{{else}}
-					{{> answer}}
+					<div class="Welcome">
+						<h2>Did you win?</h2>
+					</div>
+					<div class="AnswerList">
+						<h3>Their Team</h3>
+						{{#each getAnswers false}}
+							{{> answer}}
+						{{/each}}
+					</div>
 				{{/if}}
-			{{else}}
-				{{> answer}}
 			{{/if}}
-		 
-		{{/each}}
 	</div>
 	<div>
-		#####Your Team Answers######
-		{{#each getAnswers true}}
-		
-		 {{> answer}}
-		{{/each}}
+		{{#if isTeamLeader}}{{else}}
+			<div class="Welcome">
+				<h2>Guessing Time!</h2>
+			</div>
+		{{/if}}
+		<div class="AnswerList">
+			<h3>Your Team</h3>
+			{{#each getAnswers true}}
+				{{> answer}}
+			{{/each}}
+		</div>
+		{{#if isTeamLeader}}{{else}}
+			<div class="AnswerList">
+				<h3>Their Team</h3>
+				{{#each getAnswers False}}
+					{{> answer}}
+				{{/each}}
+			</div>
+		{{/if}}
 	</div>
 </template>
 <template name="answer">
-	<div>
-		{{chosen playerId}} - {{correct playerId}} - {{answer}}
+	<div class="{{chosen playerId}} {{correct playerId}}">
+		{{answer}} <span class="PlayerName">- {{playerName playerId}}</span>
 	</div>
 </template>
 <template name="activeAnswer">
-	<button data-playerid="{{playerId}}">{{answer}}</button>
+	<button class="btn info" data-playerid="{{playerId}}">{{answer}}</button>
 </template>

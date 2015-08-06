@@ -88,17 +88,26 @@ if (Meteor.isClient) {
       var _groupId = Players.findOne({userId : Meteor.userId()}).lastGroup;
       return Groups.findOne(_groupId).ownerId == Meteor.userId();
     },
-    yourTeam : function(){
+    yourTeam : function(TeamToCheck){
+      var TheirTeam;
       switch (Players.findOne({userId : Meteor.userId()}).team){
         case "r":
-          return "Red";
+          TheirTeam = "Red";
+          break;
         case "b":
-          return "Blue";
+          TheirTeam = "Blue";
+          break;
         case "s":
-          return "Spectator";
+          TheirTeam = "Spectator";
+          break;
         default: 
-          return "Spectator";
+          TheirTeam = "Spectator";
+          break;
       }
+      if(TeamToCheck != null)
+            return TheirTeam == TeamToCheck
+          else
+            return TheirTeam;
     },
     adminControls : function(){
       var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
@@ -117,9 +126,51 @@ if (Meteor.isClient) {
       if(group.activeQ != null){
         return "question";
       }else{
-        return "pickTeam";
+        return;
       }
-    }
+    },
+    hasStarted : function (){
+      var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
+      if(group.activeQ != null){
+        return true;
+      }else{
+        return false;
+      }
+    },
+    notLeader : function(){
+      var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
+      return !((group.redPlayer == Meteor.userId() || group.bluePlayer == Meteor.userId())); 
+    },
+    redLeader : function(){
+      var player = Players.findOne({userId : Meteor.userId()});
+      var group = Groups.findOne(player.lastGroup);
+      return Players.findOne({userId : group.redPlayer});
+    },
+    blueLeader : function(){
+      var player = Players.findOne({userId : Meteor.userId()});
+      var group = Groups.findOne(player.lastGroup);
+      return Players.findOne({userId : group.bluePlayer});
+    },
+    team : function(Team){
+      var _groupId = Players.findOne({userId : Meteor.userId()}).lastGroup;
+      var _group = Groups.findOne(_groupId);
+      var plrs = Players.find({lastGroup: _group._id, lastGroupPassword: _group.password, team: Team}, {sort : {username: -1}}).fetch();
+      var TeamLeader;
+      if(Team == "r"){
+        TeamLeader = _group.redPlayer;
+      } else{
+        TeamLeader = _group.bluePlayer;        
+      }
+      var NewPlrs = [];
+      $.each(plrs, function(index, obj){
+        var uid = obj.userId;
+        if(uid != TeamLeader){
+          NewPlrs.push(obj);
+        }
+      });
+      return NewPlrs;
+        
+      }
   });
   Template.gameRoom.events({
     "click #leaveGroup" : function(event){
@@ -128,6 +179,10 @@ if (Meteor.isClient) {
     "click #disbandGroup" : function(event){
       var _groupId = $(event.target).data("groupid");
       Meteor.call('disbandGroup', _groupId);
+    },
+    "click .team" : function(event){
+      var _team = $(event.target).data('team');
+      Meteor.call("changeTeam", Meteor.userId(), _team);
     }
   });
   Template.startGame.events({
@@ -161,6 +216,24 @@ if (Meteor.isClient) {
     },
     isBluePlayer : function(_playerId, _groupId){
       return Groups.findOne(_groupId).bluePlayer == _playerId;
+    },
+    score : function(playerId){
+      var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
+      var score = 0;
+      group.finishedQs.push(group.activeQ);
+      $.each(group.finishedQs, function(index, obj){
+          if(group.redPlayer == playerId || group.bluePlayer == playerId){
+            score = false;
+            return;
+          }
+          if(obj.redChosen == playerId || obj.blueChosen == playerId){
+            score++;
+          }
+      });
+      if(score == 0){
+        return false;
+      }
+      return score;
     }
   });
   Template.player.events({
@@ -170,20 +243,13 @@ if (Meteor.isClient) {
       Meteor.call("sendMessageToPlayer", _playerId, "You have been kicked from the room");
       Meteor.call("leaveGroup", _playerId);
     },
-    "click button.red" : function(event){
+    "click div.r" : function(event){
       var _playerId = $(event.target).data('userid');
       Meteor.call("assignPlayer", _playerId, "r");
     },
-    "click button.blue" : function(event){
+    "click div.b" : function(event){
       var _playerId = $(event.target).data('userid');
       Meteor.call("assignPlayer", _playerId, "b");
-    }
-  });
-  
-  Template.pickTeam.events({
-    "click .team" : function(event){
-      var _team = $(event.target).data('team');
-      Meteor.call("changeTeam", Meteor.userId(), _team);
     }
   });
   
@@ -301,6 +367,10 @@ if (Meteor.isClient) {
         return "correct";
       }
       return;
+    },
+    playerName : function(playerId){
+      var player = Players.findOne({userId: playerId});
+      return player.username;
     }
   });
   Template.activeAnswer.events({
@@ -308,6 +378,35 @@ if (Meteor.isClient) {
       var playerId = $(event.target).data('playerid');
       var Player = Players.findOne({userId : Meteor.userId()});
       Meteor.call("chooseAnswer", Player, playerId);
+    }
+  });
+  Template.scoreBoard.helpers({
+    score : function(team){
+      var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
+      var score = 0;
+      group.finishedQs.push(group.activeQ);
+      $.each(group.finishedQs, function(index, obj){
+        if(team == 'r'){
+          if(obj.redChosen == group.bluePlayer){
+            score++;
+          }
+           
+        }else if(team == 'b'){
+          if(obj.blueChosen == group.redPlayer){
+            score++;
+          }
+        }else {
+          if(group.redPlayer == team._id || group.bluePlayer == team._id){
+            score = false;
+            return;
+          }
+          if(obj.redChosen == team._id || obj.blueChosen == team._id){
+            score++;
+          }
+          
+        }
+      });
+      return score;
     }
   });
   Accounts.ui.config({
@@ -374,11 +473,13 @@ if (Meteor.isServer) {
     },
     populateQuestions : function(_groupId){
       var Qs = [
-        {text: "Question1?", redTeamAnswers: [], blueTeamAnswers: []},
-        {text: "Question2?"},
-        {text: "Question3?"},
-        {text: "Question4?"},
-        {text: "Question5?"},
+        {text: "What is the fist thing you noticed about your fiance?"},
+        {text: "What celebrity do you look like?"},
+        {text: "Which of your fiance's family are you most scared of?"},
+        {text: "What is your biggest fiance's pet peeve in regards to your relation ship?"},
+        {text: "What could your fiance do to make themself more attractive?"},
+        {text: "If you could change one thing about their personal hygiene, what would it be?"},
+        {text: ""}
       ]
       Groups.update(_groupId, {$set: {pendingQs : Qs, finishedQs : []}});
       Meteor.call("nextQuestion", _groupId);
