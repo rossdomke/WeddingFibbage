@@ -113,10 +113,10 @@ if (Meteor.isClient) {
       var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
       if(group.redPlayer == null || group.bluePlayer == null){
         return;
-      }else if(group.pendingQs.length == 0 && group.activeQ == null){
+      }else if(group.pendingQs.length == 0 && group.activeQ == null && group.finishedQs.length == 0){
         return "startGame";
       }else if(group.activeQ == null && group.finishedQs.lenght != 0){
-        return "tallyScore";
+        return "";
       }else{
         return "nextQuestion";
       }
@@ -125,13 +125,15 @@ if (Meteor.isClient) {
       var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
       if(group.activeQ != null){
         return "question";
+      }else if(group.finishedQs.length > 0){
+        return "tallyScore";
       }else{
         return;
       }
     },
     hasStarted : function (){
       var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
-      if(group.activeQ != null){
+      if(group.activeQ != null || group.finishedQs.length > 0){
         return true;
       }else{
         return false;
@@ -382,9 +384,12 @@ if (Meteor.isClient) {
   });
   Template.scoreBoard.helpers({
     score : function(team){
+      
       var group = Groups.findOne(Players.findOne({userId : Meteor.userId()}).lastGroup);
       var score = 0;
-      group.finishedQs.push(group.activeQ);
+      if(group.activeQ != null){
+        group.finishedQs.push(group.activeQ);
+      }
       $.each(group.finishedQs, function(index, obj){
         if(team == 'r'){
           if(obj.redChosen == group.bluePlayer){
@@ -473,13 +478,20 @@ if (Meteor.isServer) {
     },
     populateQuestions : function(_groupId){
       var Qs = [
-        {text: "What is the fist thing you noticed about your fiance?"},
+        {text: "What is the fist thing you noticed about your fiancee?"},
         {text: "What celebrity do you look like?"},
-        {text: "Which of your fiance's family are you most scared of?"},
-        {text: "What is your biggest fiance's pet peeve in regards to your relation ship?"},
-        {text: "What could your fiance do to make themself more attractive?"},
-        {text: "If you could change one thing about their personal hygiene, what would it be?"},
-        {text: ""}
+        {text: "Which of your fiancee's family are you most scared of?"},
+        {text: "What is your biggest pet peeve in regards to your relation ship?"},
+        {text: "What could your fiancee do to be more attractive?"},
+        {text: "If you could change one thing about your fiancee's personal hygiene, what would it be?"},
+        {text: "If you could choose one thing of your fiancee's to get rid of, what would it be?"},
+        {text: "What would you cook for your fiancee if they were horny?"},
+        {text: "What is your favorite food?"},
+        {text: "What is your most embarasing moment?"},
+        {text: "What's your favorite sexual position?"},
+        {text: "What was it about your fiancee that made you realize they were the one?"},
+        {text: "If you could describe your fiancee in one word what would it be?"},
+        {text: "What body part on your fiancee do you find most attractive?"}
       ]
       Groups.update(_groupId, {$set: {pendingQs : Qs, finishedQs : []}});
       Meteor.call("nextQuestion", _groupId);

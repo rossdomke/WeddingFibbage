@@ -160,6 +160,7 @@
 		{{/each}}
 	</div>
 </template>
+
 <template name="player">
 	<div class="player {{#if isOwner userId}}{{team}}{{/if}}" data-userid="{{userId}}" data-team="{{team}}">
 		{{#if isRedPlayer userId lastGroup}}
@@ -198,7 +199,11 @@
 	<hr/>
 </template>
 <template name="tallyScore">
-	Tally score not implemented
+	<hr/>
+	<div class="Welcome">
+		<h2>Game Over</h2>
+		<p>Thank you for playing</p>
+	</div>
 </template>
 <template name="question">
 	<div class="QuestionContainer">
